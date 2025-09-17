@@ -1,0 +1,36 @@
+version: v1.0
+
+name: Build and test Pipeline
+agent:
+  machine:
+    type: e1-standard-2
+    os_image: ubuntu2004
+
+global_job_config:
+
+  env_vars:
+    - name: DOCKER_USERNAME
+      value: sineverba
+    - name: DOCKER_IMAGE
+      value: universal-silabs-flasher
+    - name: PYTHON_VERSION
+      value: 3.13.7
+
+blocks:
+  - name: 'Build and test'
+    skip:
+      when: "tag =~ '.*'"
+    task:
+      jobs:
+        - name: 'Build and test'
+          commands:
+            - checkout
+            - >-
+              docker build 
+              --build-arg PYTHON_VERSION=$PYTHON_VERSION 
+              --tag $DOCKER_USERNAME/$DOCKER_IMAGE 
+              --file Dockerfile
+              "."
+            - docker run --rm -it $DOCKER_USERNAME/$DOCKER_IMAGE cat /etc/os-release | grep "Alpine"
+            - docker run --rm -it $DOCKER_USERNAME/$DOCKER_IMAGE python --version | grep $PYTHON_VERSION
+            - docker run --rm -it $DOCKER_USERNAME/$DOCKER_IMAGE pip3 --version | grep "pip 24.0"

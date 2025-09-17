@@ -1,0 +1,130 @@
+version: 2.1
+executors:
+  arm64_executor:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: arm.medium
+    environment:
+      DOCKER_IMAGE: universal-silabs-flasher
+      PYTHON_VERSION: 3.13.7
+      BINFMT_VERSION: qemu-v8.1.5-43
+  amd64_executor:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: medium
+    environment:
+      DOCKER_IMAGE: universal-silabs-flasher
+      PYTHON_VERSION: 3.13.7
+      BINFMT_VERSION: qemu-v8.1.5-43
+      DELETE_TAG_TAG: 1.0.2
+jobs:
+  build_arm64:
+    executor: arm64_executor
+    steps:
+      - checkout
+      - run:
+          name: "Login to Docker HUB"
+          command: docker login -u $DOCKER_LOGIN -p $DOCKER_PASSWORD
+      - run:
+          name: "Install tonistiigi/binfmt"
+          command: docker run --rm --privileged tonistiigi/binfmt:$BINFMT_VERSION --install all
+      - run:
+          name: "Create buildx multiarch"
+          command: |
+            docker buildx create \
+            --name multiarch \
+            --use \
+            && docker buildx inspect \
+            --bootstrap \
+            --builder \
+            multiarch
+      - run:
+          name: "Build image and push to Docker HUB"
+          command: |
+            docker buildx build \
+              --cache-to=type=inline \
+              --platform linux/arm64,linux/arm/v6,linux/arm/v7 \
+              --build-arg PYTHON_VERSION=$PYTHON_VERSION \
+              --tag $DOCKER_LOGIN/$DOCKER_IMAGE:cache-arm \
+              --file Dockerfile \
+              --push \
+              '.'
+  build_amd64:
+    executor: amd64_executor
+    steps:
+      - checkout
+      - run:
+          name: "Login to Docker HUB"
+          command: docker login -u $DOCKER_LOGIN -p $DOCKER_PASSWORD
+      - run:
+          name: "Install tonistiigi/binfmt"
+          command: docker run --rm --privileged tonistiigi/binfmt:$BINFMT_VERSION --install all
+      - run:
+          name: "Create buildx multiarch"
+          command: |
+            docker buildx create \
+            --name multiarch \
+            --use \
+            && docker buildx inspect \
+            --bootstrap \
+            --builder \
+            multiarch
+      - run:
+          name: "Build image and push to Docker HUB"
+          command: |
+            docker buildx build \
+            --cache-from type=registry,ref=$DOCKER_LOGIN/$DOCKER_IMAGE:cache-arm \
+            --platform linux/amd64,linux/arm64,linux/arm/v6,linux/arm/v7 \
+            --build-arg PYTHON_VERSION=$PYTHON_VERSION \
+            --tag $DOCKER_LOGIN/$DOCKER_IMAGE:$CIRCLE_TAG \
+            --tag $DOCKER_LOGIN/$DOCKER_IMAGE:latest \
+            --file Dockerfile \
+            --push \
+            "."
+  delete_cache_arm:
+    executor: amd64_executor
+    steps:
+      - run:
+          name: "Login to Docker HUB"
+          command: docker login -u $DOCKER_LOGIN -p $DOCKER_PASSWORD
+      - run:
+          name: "Remove cache arm image"
+          command: |
+            docker run \
+            -it \
+            --rm \
+            --name $DOCKER_IMAGE \
+            -e DOCKER_USERNAME=$DOCKER_LOGIN \
+            -e DOCKER_PASSWORD=$DOCKER_PASSWORD \
+            -e ORGANIZATION=$DOCKER_LOGIN \
+            -e IMAGE=$DOCKER_IMAGE \
+            -e TAG=cache-arm \
+            $DOCKER_LOGIN/delete-tag:$DELETE_TAG_TAG
+workflows:
+  test_and_build_images:
+    jobs:
+      - build_arm64:
+          context: SECRETS
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
+      - build_amd64:
+          context: SECRETS
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
+          requires:
+            - build_arm64
+      - delete_cache_arm:
+          context: SECRETS
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
+          requires:
+            - build_amd64

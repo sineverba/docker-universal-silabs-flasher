@@ -1,0 +1,5 @@
+qemu
+.idea/
+.env
+*.hex
+*.bin

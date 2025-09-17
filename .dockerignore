@@ -1,0 +1,6 @@
+.circleci/
+.semaphore/
+firmware/
+*.md
+LICENSE
+Makefile
