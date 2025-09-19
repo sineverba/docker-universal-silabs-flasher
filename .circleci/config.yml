@@ -7,6 +7,7 @@ executors:
     environment:
       DOCKER_IMAGE: universal-silabs-flasher
       PYTHON_VERSION: 3.13.7
+      PIP_VERSION: 25.2
       BINFMT_VERSION: qemu-v8.1.5-43
   amd64_executor:
     machine:
@@ -15,6 +16,7 @@ executors:
     environment:
       DOCKER_IMAGE: universal-silabs-flasher
       PYTHON_VERSION: 3.13.7
+      PIP_VERSION: 25.2
       BINFMT_VERSION: qemu-v8.1.5-43
       DELETE_TAG_TAG: 1.0.2
 jobs:
@@ -45,6 +47,7 @@ jobs:
               --cache-to=type=inline \
               --platform linux/arm64,linux/arm/v6,linux/arm/v7 \
               --build-arg PYTHON_VERSION=$PYTHON_VERSION \
+              --build-arg PIP_VERSION=$PIP_VERSION \
               --tag $DOCKER_LOGIN/$DOCKER_IMAGE:cache-arm \
               --file Dockerfile \
               --push \
@@ -76,6 +79,7 @@ jobs:
             --cache-from type=registry,ref=$DOCKER_LOGIN/$DOCKER_IMAGE:cache-arm \
             --platform linux/amd64,linux/arm64,linux/arm/v6,linux/arm/v7 \
             --build-arg PYTHON_VERSION=$PYTHON_VERSION \
+            --build-arg PIP_VERSION=$PIP_VERSION \
             --tag $DOCKER_LOGIN/$DOCKER_IMAGE:$CIRCLE_TAG \
             --tag $DOCKER_LOGIN/$DOCKER_IMAGE:latest \
             --file Dockerfile \

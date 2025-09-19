@@ -15,9 +15,10 @@ ENV FILENAME=firmware.hex
 
 # Copy requirements first (better Docker layer caching)
 COPY requirements.txt .
-
+# Declare PIP_VERSION after FROM to make it available in subsequent RUN instructions
+ARG PIP_VERSION
 # Upgrade pip and install requirements
-RUN pip3 install --upgrade pip && \
+RUN pip3 install --upgrade pip==${PIP_VERSION} && \
     pip3 install -r requirements.txt
 
 # Default command

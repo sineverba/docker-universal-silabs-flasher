@@ -15,6 +15,8 @@ global_job_config:
       value: universal-silabs-flasher
     - name: PYTHON_VERSION
       value: 3.13.7
+    - name: PIP_VERSION
+      value: "25.2"
 
 blocks:
   - name: 'Build and test'
@@ -28,6 +30,7 @@ blocks:
             - >-
               docker build 
               --build-arg PYTHON_VERSION=$PYTHON_VERSION 
+              --build-arg PIP_VERSION=$PIP_VERSION 
               --tag $DOCKER_USERNAME/$DOCKER_IMAGE 
               --file Dockerfile
               "."

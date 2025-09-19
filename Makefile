@@ -8,6 +8,7 @@ TOPDIR=$(PWD)
 build:
 	docker build \
 		--build-arg PYTHON_VERSION=$(PYTHON_VERSION) \
+		--build-arg PIP_VERSION=$(PIP_VERSION) \
 		--tag $(IMAGE_NAME):$(VERSION) \
 		--file Dockerfile \
 		"."
