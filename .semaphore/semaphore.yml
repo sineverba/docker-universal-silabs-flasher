@@ -16,7 +16,7 @@ global_job_config:
     - name: PYTHON_VERSION
       value: 3.13.7
     - name: PIP_VERSION
-      value: 25.2
+      value: "25.2"
 
 blocks:
   - name: 'Build and test'
