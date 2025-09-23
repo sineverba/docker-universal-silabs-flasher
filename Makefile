@@ -16,7 +16,7 @@ build:
 # Get latest available pip version
 get-latest-pip:
 	@echo "Checking latest available pip version..."
-	@LATEST_PIP=$$(docker run --rm python:$(PYTHON_VERSION)-alpine3.22 /bin/sh -c "pip --version | awk '{print \$$2}'"); \
+	@LATEST_PIP=$$(docker run --rm python:$(PYTHON_VERSION)-alpine3.22 /bin/sh -c "pip install --upgrade pip > /dev/null 2>&1 && pip --version | awk '{print \$$2}'"); \
 	echo "Latest pip version: $$LATEST_PIP"
 
 # Update PIP_VERSION variable in Makefile
