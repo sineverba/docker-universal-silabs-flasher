@@ -19,10 +19,10 @@ get-latest-pip:
 	@LATEST_PIP=$$(docker run --rm python:$(PYTHON_VERSION)-alpine3.22 /bin/sh -c "pip install --upgrade pip > /dev/null 2>&1 && pip --version | awk '{print \$$2}'"); \
 	echo "Latest pip version: $$LATEST_PIP"
 
-# Update PIP_VERSION variable in Makefile
+# Update PIP_VERSION variable in Makefile using the latest version
 update-pip-version:
 	@echo "Updating PIP_VERSION in Makefile..."
-	@LATEST_PIP=$$(docker run --rm python:$(PYTHON_VERSION)-alpine3.22 /bin/sh -c "pip --version | cut -d' ' -f2"); \
+	@LATEST_PIP=$$($(MAKE) --no-print-directory get-latest-pip | grep "Latest pip version:" | cut -d' ' -f4); \
 	echo "Updating from $(PIP_VERSION) to $$LATEST_PIP"; \
 	sed -i "s/^PIP_VERSION=.*/PIP_VERSION=$$LATEST_PIP/" Makefile; \
 	echo "PIP_VERSION updated to $$LATEST_PIP"
